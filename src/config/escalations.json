@@ -1,0 +1,53 @@
+[
+  {
+    "id": "TKT-1786284367353",
+    "sender": "228097190322388",
+    "name": "Prabss",
+    "description": "Ane Presiden nih",
+    "status": "RESOLVED",
+    "created_at": "2026-08-09T14:06:07.353Z",
+    "resolved_at": "2026-08-09T14:07:02.711Z"
+  },
+  {
+    "id": "TKT-1786284368555",
+    "sender": "255370819834085",
+    "name": "Gibranss",
+    "description": "Ane Wapres nih",
+    "status": "RESOLVED",
+    "created_at": "2026-08-09T14:06:08.555Z",
+    "resolved_at": "2026-08-09T14:07:02.730Z"
+  },
+  {
+    "id": "TKT-1786420143151",
+    "sender": "228097190322388",
+    "name": "Mulyono",
+    "description": "Saya akan lawann!!!",
+    "status": "RESOLVED",
+    "created_at": "2026-08-11T03:49:03.151Z",
+    "resolved_at": "2026-08-11T03:51:59.669Z"
+  },
+  {
+    "id": "TKT-1786429985469",
+    "sender": "71644450152481",
+    "name": "Aisyah",
+    "description": "Pengumuman penerimaan mitra bps kab tang",
+    "status": "OPEN",
+    "created_at": "2026-08-11T06:33:05.469Z"
+  },
+  {
+    "id": "TKT-1786432143153",
+    "sender": "278893802045548",
+    "name": "Msy",
+    "description": "Mau magang",
+    "status": "OPEN",
+    "created_at": "2026-08-11T07:09:03.153Z"
+  },
+  {
+    "id": "TKT-1786975692397",
+    "sender": "228097190322388",
+    "name": "Qwerty",
+    "description": "Pokoknya adalah",
+    "status": "OPEN",
+    "created_at": "2026-08-17T14:08:12.397Z"
+  }
+]

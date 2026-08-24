@@ -1,0 +1,72 @@
+[
+  {
+    "id": "1",
+    "parent_id": null,
+    "title": "Informasi Jam Buka Kantor",
+    "is_menu": false,
+    "content": "Kantor BPS buka hari Senin - Jumat pukul 08:00 - 16:00 WIB."
+  },
+  {
+    "id": "2",
+    "parent_id": null,
+    "title": "Jadwal Sensus",
+    "is_menu": false,
+    "content": "Sensus Penduduk selanjutnya akan dilaksanakan pada tahun 2030. Untuk survei rutin tahun ini, silakan hubungi pihak kantor."
+  },
+  {
+    "id": "3",
+    "parent_id": null,
+    "title": "Data Indikator",
+    "is_menu": true,
+    "content": "Pilih informasi Data Indikator yang Anda butuhkan:"
+  },
+  {
+    "id": "3A",
+    "parent_id": "3",
+    "title": "Data IPM",
+    "is_menu": false,
+    "content": "Indeks Pembangunan Manusia (IPM) Banten tahun 2023 adalah 73.32."
+  },
+  {
+    "id": "3B",
+    "parent_id": "3",
+    "title": "Data Ketenagakerjaan",
+    "is_menu": false,
+    "content": "Tingkat Pengangguran Terbuka (TPT) Banten per Agustus 2023 sebesar 7.52%."
+  },
+  {
+    "id": "3C",
+    "parent_id": "3",
+    "title": "Data Kependudukan",
+    "is_menu": false,
+    "content": "Jumlah Penduduk Banten hasil Sensus Penduduk 2020 adalah 11,90 juta jiwa."
+  },
+  {
+    "id": "4",
+    "parent_id": null,
+    "title": "Konsep dan Definisi",
+    "is_menu": true,
+    "content": "Pilih menu Konsep dan Definisi yang ingin Anda baca:"
+  },
+  {
+    "id": "4A",
+    "parent_id": "4",
+    "title": "Apa itu IPM?",
+    "is_menu": false,
+    "content": "IPM mengukur capaian pembangunan manusia berbasis sejumlah komponen dasar kualitas hidup."
+  },
+  {
+    "id": "4B",
+    "parent_id": "4",
+    "title": "Definisi Pengangguran",
+    "is_menu": false,
+    "content": "Pengangguran adalah penduduk yang tidak bekerja namun sedang mencari pekerjaan atau mempersiapkan usaha baru."
+  },
+  {
+    "id": "99",
+    "parent_id": null,
+    "title": "Layanan Lainnya / Eskalasi ke Petugas",
+    "is_menu": false,
+    "content": "TRIGGER_ESCALATION"
+  }
+]
