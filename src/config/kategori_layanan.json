@@ -1,0 +1,17 @@
+[
+  {
+    "kode": "1",
+    "nama": "Permintaan Data",
+    "is_active": true
+  },
+  {
+    "kode": "2",
+    "nama": "Konsultasi Statistik",
+    "is_active": true
+  },
+  {
+    "kode": "99",
+    "nama": "Pengaduan",
+    "is_active": true
+  }
+]

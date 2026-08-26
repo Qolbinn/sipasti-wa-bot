@@ -2,34 +2,22 @@ import fs from 'fs';
 import path from 'path';
 import { logger } from '../utils/logger.js';
 import { updateSession, clearSession } from './sessionService.js';
+import { insertEscalation } from './database.js';
+import { getTemplate } from './templateService.js';
 
-const escalationsPath = path.join(process.cwd(), 'src', 'config', 'escalations.json');
-
-// Pastikan file ada
-if (!fs.existsSync(escalationsPath)) {
-    fs.writeFileSync(escalationsPath, JSON.stringify([]));
-}
+const configDir = path.join(process.cwd(), 'src', 'config');
 
 /**
- * Menyimpan tiket eskalasi ke database/JSON
+ * Mendapatkan daftar kategori aktif dari file cache
  */
-const saveEscalation = (senderNumber, data) => {
+const getKategori = () => {
     try {
-        const escalations = JSON.parse(fs.readFileSync(escalationsPath, 'utf-8'));
-        const newTicket = {
-            id: `TKT-${Date.now()}`,
-            sender: senderNumber,
-            name: data.name,
-            description: data.description,
-            status: 'OPEN',
-            created_at: new Date().toISOString()
-        };
-        escalations.push(newTicket);
-        fs.writeFileSync(escalationsPath, JSON.stringify(escalations, null, 2));
-        return newTicket;
+        const filePath = path.join(configDir, 'kategori_layanan.json');
+        if (!fs.existsSync(filePath)) return [];
+        return JSON.parse(fs.readFileSync(filePath, 'utf-8'));
     } catch (error) {
-        logger.error('Gagal menyimpan tiket eskalasi:', error.message);
-        return null;
+        logger.error('Gagal membaca cache kategori:', error.message);
+        return [];
     }
 };
 
@@ -38,9 +26,9 @@ const saveEscalation = (senderNumber, data) => {
  * @param {string} senderNumber - Nomor pengirim
  * @param {string} text - Pesan dari pengguna
  * @param {Object} session - Sesi saat ini
- * @returns {Object} { message: string, addLabel?: boolean }
+ * @returns {Promise<Object>} { message: string, addLabel?: boolean }
  */
-export const processEscalation = (senderNumber, text, session) => {
+export const processEscalation = async (senderNumber, text, session) => {
     const input = text.trim();
     
     // Fitur Batal Global
@@ -55,24 +43,74 @@ export const processEscalation = (senderNumber, text, session) => {
             if (input.length < 2) {
                 return { message: "Nama terlalu pendek. Silakan tuliskan nama lengkap Anda yang sebenarnya (Ketik *BATAL* untuk membatalkan):" };
             }
-            updateSession(senderNumber, 'ESCALATION_ASK_DESC', { name: input });
-            return { message: `Halo *${input}*, silakan jelaskan secara detail kendala atau keperluan Anda (Ketik *BATAL* untuk membatalkan):` };
+            
+            const categories = getKategori();
+            if (categories.length === 0) {
+                return { message: "Mohon maaf, layanan eskalasi sedang tidak tersedia karena daftar kategori kosong. Silakan ketik *BATAL*." };
+            }
+
+            let catMessage = `Halo *${input}*, silakan pilih Kategori Layanan yang Anda butuhkan dengan membalas *nomor urutnya* saja:\n\n`;
+            categories.forEach((cat, index) => {
+                catMessage += `${index + 1}. ${cat.nama}\n`;
+            });
+            catMessage += `\n_(Ketik *BATAL* untuk membatalkan)_`;
+
+            updateSession(senderNumber, 'ESCALATION_ASK_CATEGORY', { name: input });
+            return { message: catMessage };
+
+        case 'ESCALATION_ASK_CATEGORY':
+            const cats = getKategori();
+            const choiceIndex = parseInt(input) - 1;
+            
+            if (isNaN(choiceIndex) || choiceIndex < 0 || choiceIndex >= cats.length) {
+                return { message: "Pilihan tidak valid. Silakan balas dengan *angka* yang sesuai dengan pilihan kategori." };
+            }
+            
+            const selectedCat = cats[choiceIndex];
+            
+            updateSession(senderNumber, 'ESCALATION_ASK_DESC', { 
+                name: session.data.name, 
+                kategori_kode: selectedCat.kode,
+                kategori_nama: selectedCat.nama
+            });
+            
+            return { message: `Anda memilih kategori *${selectedCat.nama}*.\n\nSilakan jelaskan secara detail kendala atau keperluan Anda (Ketik *BATAL* untuk membatalkan):` };
 
         case 'ESCALATION_ASK_DESC':
             // Asumsikan input yang masuk adalah Deskripsi Keperluan
             if (input.length < 10) {
                 return { message: "Deskripsi terlalu singkat. Mohon jelaskan lebih detail agar petugas kami dapat membantu Anda dengan baik (Ketik *BATAL* untuk membatalkan):" };
             }
-            updateSession(senderNumber, 'ESCALATION_CONFIRM', { description: input });
-            return { message: `📋 *Konfirmasi Permintaan Layanan*\n\n*Nama:* ${session.data.name}\n*Keperluan:* ${input}\n\nApakah data di atas sudah benar?\n\nKetik *1* untuk SETUJU & KIRIM\nKetik *0* untuk ULANGI\nKetik *BATAL* untuk membatalkan` };
+            updateSession(senderNumber, 'ESCALATION_CONFIRM', { 
+                name: session.data.name,
+                kategori_kode: session.data.kategori_kode,
+                kategori_nama: session.data.kategori_nama,
+                description: input 
+            });
+            return { message: `📋 *Konfirmasi Permintaan Layanan*\n\n*Nama:* ${session.data.name}\n*Kategori:* ${session.data.kategori_nama}\n*Keperluan:* ${input}\n\nApakah data di atas sudah benar?\n\nKetik *1* untuk SETUJU & KIRIM\nKetik *0* untuk ULANGI\nKetik *BATAL* untuk membatalkan` };
 
         case 'ESCALATION_CONFIRM':
             if (input === '1') {
-                const ticket = saveEscalation(senderNumber, session.data);
+                const payload = {
+                    pelanggan_lid: senderNumber,
+                    nama_pelanggan: session.data.name,
+                    kategori_kode: session.data.kategori_kode,
+                    detail: session.data.description,
+                    channel: 'whatsapp'
+                };
+                
+                const ticket = await insertEscalation(payload);
                 clearSession(senderNumber);
+                
                 if (ticket) {
+                    const customTemplate = getTemplate('create_ticket', {
+                        customerName: session.data.name
+                    });
+                    
+                    const successMsg = customTemplate || `✅ *Tiket Berhasil Dibuat*\n\nTerima kasih ${session.data.name}, keperluan Anda telah diteruskan ke petugas kami.`;
+                    
                     return { 
-                        message: `✅ *Tiket Berhasil Dibuat* (ID: ${ticket.id})\n\nKeperluan Anda telah diteruskan ke petugas kami. Petugas akan segera membalas pesan Anda di obrolan ini. Mohon ditunggu ya!`,
+                        message: successMsg,
                         addLabel: true // Flag agar handler tahu harus menambahkan label
                     };
                 } else {
@@ -93,33 +131,16 @@ export const processEscalation = (senderNumber, text, session) => {
 
 /**
  * Menutup tiket eskalasi yang masih OPEN berdasarkan nomor pengirim
+ * (Dalam arsitektur baru, petugas akan menutup dari Web App, tapi jika agen menutup via WA (cmd /selesai))
  * @param {string} senderNumber - Nomor pelanggan
- * @returns {boolean} True jika berhasil menemukan dan menutup tiket
+ * @returns {boolean}
  */
 export const resolveEscalation = (senderNumber) => {
-    try {
-        const escalations = JSON.parse(fs.readFileSync(escalationsPath, 'utf-8'));
-        let found = false;
-        
-        // Cari tiket terakhir yang masih OPEN untuk nomor ini
-        for (let i = escalations.length - 1; i >= 0; i--) {
-            if (escalations[i].sender === senderNumber && escalations[i].status === 'OPEN') {
-                escalations[i].status = 'RESOLVED';
-                escalations[i].resolved_at = new Date().toISOString();
-                found = true;
-                break; // Tutup 1 tiket terbaru saja
-            }
-        }
-
-        if (found) {
-            fs.writeFileSync(escalationsPath, JSON.stringify(escalations, null, 2));
-            return true;
-        }
-        return false;
-    } catch (error) {
-        logger.error('Gagal resolve tiket:', error.message);
-        return false;
-    }
+    // Karena kita tidak menyimpan state eskalasi di lokal JSON, maka resolve via WA cmd /selesai harus 
+    // mengeksekusi update DB Supabase jika diperlukan. 
+    // Tapi karena agen membalas dari HP-nya langsung, dia tidak mengubah status di DB web app secara atomik.
+    // Fitur /selesai di WA ini sementara hanya membuang label chat WA business.
+    return true; 
 };
 
 /**
@@ -129,3 +150,4 @@ export const startEscalation = (senderNumber) => {
     updateSession(senderNumber, 'ESCALATION_ASK_NAME');
     return "Anda memilih layanan eskalasi ke petugas.\n\nSilakan tuliskan *nama lengkap* Anda:\n\n_(Catatan: Sesi ini akan otomatis dibatalkan jika Anda tidak membalas dalam 15 menit. Ketik *BATAL* untuk kembali sekarang.)_";
 };
+

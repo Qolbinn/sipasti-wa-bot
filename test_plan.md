@@ -43,4 +43,30 @@ Dokumen ini memuat skenario pengujian (berbasis perilaku pengguna) yang dapat An
 
 ---
 
+## 🧪 Fase 3: Alur Eskalasi & Trigger Survei (Hari 4)
+
+**Tujuan Uji:** Memastikan alur interaktif WA (State Machine) untuk eskalasi berjalan lancar, dan *trigger realtime* dari tabel `eskalasi` Supabase bisa memicu bot untuk mengirim notifikasi survei.
+
+### Skenario 3.1: Pembuatan Tiket Eskalasi via WA
+1. **Prasyarat:** Pastikan bot menyala dan sudah terhubung ke database. Cek apakah ada data di tabel `kategori_layanan` Supabase.
+2. **Langkah:** Kirim "99" (kode eskalasi) ke bot.
+3. **Ekspektasi WA:** Bot meminta Anda mengisikan "nama lengkap".
+4. **Langkah:** Balas dengan nama Anda (cth: "Andi").
+5. **Ekspektasi WA:** Bot menampilkan daftar kategori layanan beserta nomor urutnya.
+6. **Langkah:** Balas dengan nomor kategori (cth: "1").
+7. **Ekspektasi WA:** Bot meminta Anda menuliskan detail keperluan.
+8. **Langkah:** Balas dengan deskripsi (cth: "Tolong bantu saya mereset password akun.").
+9. **Ekspektasi WA:** Bot memunculkan konfirmasi data. Ketik "1" untuk setuju.
+10. **Ekspektasi WA:** Bot membalas bahwa tiket berhasil dibuat, menggunakan **template dinamis** `create_ticket` yang menyebutkan nama Anda.
+11. **Ekspektasi Sistem:** Cek tabel `eskalasi` di Supabase. Harus ada satu baris baru dengan nama dan keperluan Anda berstatus `OPEN`.
+
+### Skenario 3.2: Trigger Feedback Realtime
+1. **Prasyarat:** Anda baru saja membuat tiket di atas.
+2. **Langkah:** Buka Supabase Studio, masuk ke tabel `eskalasi`. Ubah status baris tadi menjadi `RESOLVED` (atau ubah via Web App). Kemudian, ubah `feedback_status` menjadi `PENDING` lalu tekan Save/Save changes.
+3. **Ekspektasi Output Terminal:** Muncul log `"Trigger feedback terdeteksi"` dan `"✅ Berhasil mengirim notifikasi feedback"`.
+4. **Ekspektasi WA:** Anda akan otomatis menerima chat WA baru berisi template `feedback` yang sudah disisipi sapaan waktu dan nama Anda.
+5. **Ekspektasi Sistem:** Cek tabel `eskalasi`, `feedback_status` harus otomatis berubah menjadi `SENT`. Cek tabel `bot_notif_log`, harus ada log sukses pengiriman feedback.
+
+---
+
 *(Test Plan ini akan terus diperbarui secara otomatis setiap kali kita menyelesaikan pengembangan fitur baru)*

@@ -57,7 +57,7 @@ export const processIncomingMessage = async (msg) => {
 
         if (activeSession) {
             // Jika user sedang berada di dalam alur tanya-jawab (misal Eskalasi)
-            const response = processEscalation(senderNumber, text, activeSession);
+            const response = await processEscalation(senderNumber, text, activeSession);
             await sendText(remoteJid, response.message, msg);
 
             if (response.addLabel) {
