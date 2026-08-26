@@ -2,11 +2,14 @@ import fs from 'fs';
 import path from 'path';
 import { logger } from '../utils/logger.js';
 import { supabase } from '../config/supabase.js';
-import { fetchAllFaq, fetchAllTemplates } from './database.js';
+import { fetchAllFaq, fetchAllTemplates, syncKategoriCache, updateFeedbackStatus, logBotNotif } from './database.js';
+import { sendText } from '../providers/whatsapp.js';
+import { getTemplate } from './templateService.js';
 
 const configDir = path.join(process.cwd(), 'src', 'config');
 const faqPath = path.join(configDir, 'faq_data.json');
 const templatePath = path.join(configDir, 'template_pesan.json');
+const kategoriPath = path.join(configDir, 'kategori_layanan.json');
 
 /**
  * Menulis data ke file JSON secara sinkron.
@@ -53,41 +56,9 @@ export const syncTemplateCache = async () => {
  */
 export const initializeCache = async () => {
     logger.info('Mulai sinkronisasi cache awal dari Supabase...');
-    // Jalankan secara paralel untuk mempercepat proses startup
-    await Promise.all([
-        syncFaqCache(),
-        syncTemplateCache()
-    ]);
+    await syncFaqCache();
+    await syncTemplateCache();
+    await syncKategoriCache();
     logger.info('Sinkronisasi cache awal selesai.');
 };
 
-/**
- * Inisialisasi Realtime Listener Supabase untuk auto-sync Cache.
- */
-export const initRealtimeListeners = () => {
-    logger.info('Mendaftarkan Supabase Realtime Listener untuk Master Data...');
-    
-    supabase
-        .channel('master-data-channel')
-        .on(
-            'postgres_changes',
-            { event: '*', schema: 'public', table: 'faq_menu' },
-            (payload) => {
-                logger.info(`Terdeteksi perubahan [${payload.eventType}] pada tabel faq_menu, memuat ulang cache...`);
-                syncFaqCache();
-            }
-        )
-        .on(
-            'postgres_changes',
-            { event: '*', schema: 'public', table: 'template_pesan' },
-            (payload) => {
-                logger.info(`Terdeteksi perubahan [${payload.eventType}] pada tabel template_pesan, memuat ulang cache...`);
-                syncTemplateCache();
-            }
-        )
-        .subscribe((status) => {
-            if (status === 'SUBSCRIBED') {
-                logger.info('✅ Realtime Listener berhasil terhubung ke Supabase');
-            }
-        });
-};
