@@ -1,5 +1,6 @@
 import 'dotenv/config';
 import { logger } from './utils/logger.js';
+import { initializeCache } from './services/cacheService.js';
 import { initWhatsApp } from './providers/whatsapp.js';
 import { processIncomingMessage } from './handlers/messageHandler.js';
 
@@ -7,6 +8,9 @@ const start = async () => {
     logger.info('Memulai service SIPASTI Bot (Phase 1 PoC)...');
     
     try {
+        // Tarik data awal dari Supabase ke lokal Cache JSON
+        await initializeCache();
+
         // Inisialisasi WhatsApp provider dan passing handler sebagai callback
         // Pola ini mematuhi Adapter Pattern / Dependency Inversion
         await initWhatsApp(processIncomingMessage);
