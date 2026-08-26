@@ -1,0 +1,23 @@
+[
+  {
+    "id": "fd8cadc3-1e2c-4e12-a4a6-a7b8247976a7",
+    "tipe": "greeting",
+    "konten": "Woii {{nomor_tiket}}",
+    "created_at": "2026-08-24T15:08:53.581752+00:00",
+    "updated_at": "2026-08-24T15:09:00.303271+00:00"
+  },
+  {
+    "id": "eab4b11c-011a-45e1-b9c9-0fab6e719a99",
+    "tipe": "feedback",
+    "konten": "testtt ",
+    "created_at": "2026-08-24T15:30:42.139036+00:00",
+    "updated_at": "2026-08-24T15:30:40.725+00:00"
+  },
+  {
+    "id": "f3d7b22a-bfaf-47d6-a4f6-2e3a8b2450af",
+    "tipe": "create_ticket",
+    "konten": "Tiket Eskalasi Anda telah berhasil dibuat 🙏🏻\n\nSLA Kami *3 hari kerja* ya ",
+    "created_at": "2026-08-26T08:45:26.450662+00:00",
+    "updated_at": "2026-08-26T08:45:25.815+00:00"
+  }
+]

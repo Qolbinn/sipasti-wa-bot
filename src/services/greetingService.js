@@ -1,6 +1,8 @@
 import fs from 'fs';
 import path from 'path';
 import { logger } from '../utils/logger.js';
+import { recordDailyChat } from './database.js';
+import { getTemplate } from './templateService.js';
 
 const statsPath = path.join(process.cwd(), 'src', 'config', 'daily_stats.json');
 
@@ -65,7 +67,18 @@ export const getGreetingText = (pushName) => {
 
     // Jika pushName kosong atau berisi karakter non-alfabetik yang dominan, gunakan fallback "Kak"
     const name = pushName ? pushName.trim() : 'Bapak/Ibu/Kak';
-    
+
+    // Coba ambil dari template JSON yang dinamis
+    const customTemplate = getTemplate('greeting', {
+        timeGreeting: timeGreeting,
+        customerName: name
+    });
+
+    if (customTemplate) {
+        return customTemplate;
+    }
+
+    // Fallback bawaan (Hardcode) jika konfigurasi database belum ter-sync
     return `Selamat ${timeGreeting} ${name}, selamat datang di SIPASTI (Sistem Pelayanan Statistik Terintegrasi) BPS Kabupaten Tangerang.`;
 };
 
@@ -91,7 +104,13 @@ export const checkAndRecordGreeting = (senderNumber) => {
     if (!currentData.greetedNumbers.includes(senderNumber)) {
         // Ini adalah kontak pertama hari ini
         currentData.greetedNumbers.push(senderNumber);
-        saveStats(); // Simpan perubahan ke JSON (Nanti bisa diubah jadi Insert ke DB Supabase)
+        saveStats(); // Simpan perubahan ke JSON
+
+        // Fire and Forget ke Supabase (Tanpa await, tidak memblokir)
+        recordDailyChat(senderNumber).catch(err => {
+            // Error sudah di-handle di database.js, tapi biarkan catch ini untuk safety
+        });
+
         return true;
     }
 
