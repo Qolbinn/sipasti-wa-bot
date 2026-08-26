@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { logger } from '../utils/logger.js';
+import { supabase } from '../config/supabase.js';
 import { fetchAllFaq, fetchAllTemplates } from './database.js';
 
 const configDir = path.join(process.cwd(), 'src', 'config');
@@ -58,4 +59,35 @@ export const initializeCache = async () => {
         syncTemplateCache()
     ]);
     logger.info('Sinkronisasi cache awal selesai.');
+};
+
+/**
+ * Inisialisasi Realtime Listener Supabase untuk auto-sync Cache.
+ */
+export const initRealtimeListeners = () => {
+    logger.info('Mendaftarkan Supabase Realtime Listener untuk Master Data...');
+    
+    supabase
+        .channel('master-data-channel')
+        .on(
+            'postgres_changes',
+            { event: '*', schema: 'public', table: 'faq_menu' },
+            (payload) => {
+                logger.info(`Terdeteksi perubahan [${payload.eventType}] pada tabel faq_menu, memuat ulang cache...`);
+                syncFaqCache();
+            }
+        )
+        .on(
+            'postgres_changes',
+            { event: '*', schema: 'public', table: 'template_pesan' },
+            (payload) => {
+                logger.info(`Terdeteksi perubahan [${payload.eventType}] pada tabel template_pesan, memuat ulang cache...`);
+                syncTemplateCache();
+            }
+        )
+        .subscribe((status) => {
+            if (status === 'SUBSCRIBED') {
+                logger.info('✅ Realtime Listener berhasil terhubung ke Supabase');
+            }
+        });
 };
