@@ -1,6 +1,7 @@
 import 'dotenv/config';
 import { logger } from './utils/logger.js';
-import { initializeCache, initRealtimeListeners } from './services/cacheService.js';
+import { initializeCache } from './services/cacheService.js';
+import { initRealtimeListeners } from './handlers/realtimeHandler.js';
 import { initWhatsApp } from './providers/whatsapp.js';
 import { processIncomingMessage } from './handlers/messageHandler.js';
 

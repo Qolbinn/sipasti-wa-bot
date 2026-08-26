@@ -2,8 +2,9 @@ import fs from 'fs';
 import path from 'path';
 import { logger } from '../utils/logger.js';
 import { updateSession, clearSession } from './sessionService.js';
-import { insertEscalation } from './database.js';
+import { insertEscalation, updateFeedbackStatus, logBotNotif } from './database.js';
 import { getTemplate } from './templateService.js';
+import { sendText } from '../providers/whatsapp.js';
 
 const configDir = path.join(process.cwd(), 'src', 'config');
 
@@ -151,3 +152,44 @@ export const startEscalation = (senderNumber) => {
     return "Anda memilih layanan eskalasi ke petugas.\n\nSilakan tuliskan *nama lengkap* Anda:\n\n_(Catatan: Sesi ini akan otomatis dibatalkan jika Anda tidak membalas dalam 15 menit. Ketik *BATAL* untuk kembali sekarang.)_";
 };
 
+/**
+ * Memproses logika notifikasi ketika trigger feedback dari database masuk
+ * @param {Object} newData Data eskalasi terbaru
+ * @param {Object} oldData Data eskalasi sebelumnya
+ */
+export const processFeedbackTrigger = async (newData, oldData) => {
+    // Cek apakah feedback_status berubah menjadi 'PENDING'
+    if (newData.feedback_status === 'PENDING' && oldData.feedback_status !== 'PENDING') {
+        logger.info({ eskalasi_id: newData.id, lid_wa: newData.pelanggan_lid }, 'Trigger feedback terdeteksi dari Supabase');
+        
+        try {
+            // Menentukan sapaan waktu
+            const hour = new Date().getHours();
+            let timeGreeting = '';
+            if (hour >= 0 && hour < 11) timeGreeting = 'pagi';
+            else if (hour >= 11 && hour < 15) timeGreeting = 'siang';
+            else if (hour >= 15 && hour < 18) timeGreeting = 'sore';
+            else timeGreeting = 'malam';
+
+            // Ambil template
+            const msg = getTemplate('feedback', {
+                timeGreeting: timeGreeting,
+                customerName: newData.nama_pelanggan
+            }) || `Selamat ${timeGreeting} ${newData.nama_pelanggan}, mohon isi ulasan penilaian layanan eskalasi kami.`;
+
+            // Kirim Pesan WA
+            await sendText(newData.pelanggan_lid, msg);
+            
+            // Update Supabase menjadi SENT
+            await updateFeedbackStatus(newData.id, 'SENT');
+            
+            // Catat ke log bot
+            await logBotNotif('feedback', newData.pelanggan_lid, 'SUCCESS');
+            logger.info('✅ Berhasil mengirim notifikasi feedback');
+
+        } catch (error) {
+            logger.error({ error: error.message }, 'Gagal memproses trigger feedback');
+            await logBotNotif('feedback', newData.pelanggan_lid, 'ERROR', error.message);
+        }
+    }
+};
