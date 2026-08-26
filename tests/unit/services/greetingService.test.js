@@ -4,8 +4,16 @@ import { getGreetingText, checkAndRecordGreeting } from '../../../src/services/g
 // Mock dependensi eksternal agar unit test tidak menyentuh file asli / database
 vi.mock('fs', () => ({
     default: {
-        existsSync: vi.fn(() => false),
-        readFileSync: vi.fn(),
+        existsSync: vi.fn(() => true), // Pura-puranya file json selalu ada
+        readFileSync: vi.fn((pathStr) => {
+            if (pathStr.includes('template_pesan.json')) {
+                return JSON.stringify([{
+                    tipe: 'greeting',
+                    konten: 'TESTING: Selamat {{timeGreeting}} {{customerName}} di BPS!'
+                }]);
+            }
+            return JSON.stringify({ date: '', greetedNumbers: [] });
+        }),
         writeFileSync: vi.fn(),
         mkdirSync: vi.fn(),
     }
@@ -35,7 +43,8 @@ describe('greetingService', () => {
             vi.setSystemTime(date);
 
             const result = getGreetingText('Andi');
-            expect(result).toContain('Selamat pagi Andi');
+            // Memeriksa output template dinamis, bukan string hardcode bawaan lagi
+            expect(result).toBe('TESTING: Selamat pagi Andi di BPS!');
         });
 
         it('harus membalas "Selamat siang" jika jam 13:00', () => {
@@ -44,7 +53,7 @@ describe('greetingService', () => {
             vi.setSystemTime(date);
 
             const result = getGreetingText('Budi');
-            expect(result).toContain('Selamat siang Budi');
+            expect(result).toBe('TESTING: Selamat siang Budi di BPS!');
         });
 
         it('harus membalas "Selamat sore" jika jam 16:30', () => {
@@ -52,7 +61,7 @@ describe('greetingService', () => {
             vi.setSystemTime(date);
 
             const result = getGreetingText('Caca');
-            expect(result).toContain('Selamat sore Caca');
+            expect(result).toBe('TESTING: Selamat sore Caca di BPS!');
         });
 
         it('harus membalas "Selamat malam" jika jam 21:00', () => {
@@ -60,15 +69,15 @@ describe('greetingService', () => {
             vi.setSystemTime(date);
 
             const result = getGreetingText('Doni');
-            expect(result).toContain('Selamat malam Doni');
+            expect(result).toBe('TESTING: Selamat malam Doni di BPS!');
         });
 
-        it('harus membalas dengan fallback jika pushName kosong', () => {
+        it('harus membalas dengan fallback pushName kosong jika argumen kosong', () => {
             const date = new Date(2026, 1, 1, 9, 0, 0);
             vi.setSystemTime(date);
 
             const result = getGreetingText('');
-            expect(result).toContain('Selamat pagi Bapak/Ibu/Kak');
+            expect(result).toBe('TESTING: Selamat pagi Bapak/Ibu/Kak di BPS!');
         });
     });
 
