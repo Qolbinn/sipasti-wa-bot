@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { logger } from '../utils/logger.js';
+import { recordDailyChat } from './database.js';
 
 const statsPath = path.join(process.cwd(), 'src', 'config', 'daily_stats.json');
 
@@ -91,7 +92,13 @@ export const checkAndRecordGreeting = (senderNumber) => {
     if (!currentData.greetedNumbers.includes(senderNumber)) {
         // Ini adalah kontak pertama hari ini
         currentData.greetedNumbers.push(senderNumber);
-        saveStats(); // Simpan perubahan ke JSON (Nanti bisa diubah jadi Insert ke DB Supabase)
+        saveStats(); // Simpan perubahan ke JSON
+        
+        // Fire and Forget ke Supabase (Tanpa await, tidak memblokir)
+        recordDailyChat(senderNumber).catch(err => {
+            // Error sudah di-handle di database.js, tapi biarkan catch ini untuk safety
+        });
+        
         return true;
     }
 
