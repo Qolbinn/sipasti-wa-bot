@@ -196,3 +196,25 @@ export const getEskalasiStats = async () => {
         return { openTicket: 0, onProcessTicket: 0 };
     }
 };
+
+/**
+ * Memperbarui status nyala/matinya bot (Ping)
+ * @param {string} status - Default 'ONLINE'
+ */
+export const updateBotStatus = async (status = 'ONLINE') => {
+    try {
+        const payload = {
+            service_name: 'wa_bot',
+            status: status,
+            last_ping_at: new Date().toISOString()
+        };
+
+        const { error } = await supabase
+            .from('bot_status')
+            .upsert(payload, { onConflict: 'service_name' });
+
+        if (error) throw error;
+    } catch (error) {
+        logger.warn({ error: error.message }, 'Gagal mengirim ping status ke bot_status (Fire and Forget)');
+    }
+};

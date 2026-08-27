@@ -72,3 +72,16 @@ Dokumen ini merangkum *User Acceptance Test (UAT)* untuk menguji secara manual f
 5. **Ekspektasi WA:** Nomor Anda akan menerima pesan template `reminder_jadwal` (beserta jumlah *Open Ticket* dan *On Process Ticket*).
 6. **Ekspektasi Sistem:** Di tabel `bot_notif_log` muncul *record* baru berstatus `SUCCESS` untuk `tipe_notif: reminder_jadwal`.
 7. **Pembersihan:** Kembalikan *cron interval* ke jam aslinya setelah pengujian berhasil.
+
+---
+
+## Fase 5: Bot Status Ping & Error Handling (Hari 6)
+
+### Skenario 5.1: Verifikasi Denyut Nadi Bot (Ping Status)
+1. **Prasyarat:** Database Supabase memiliki tabel `bot_status` yang strukturnya sesuai ERD.
+2. **Langkah:** Jalankan `npm start`. Biarkan bot berjalan selama 10-15 menit tanpa melakukan apa-apa.
+3. **Ekspektasi Sistem:**
+   - Buka Supabase Studio, masuk ke tabel `bot_status`.
+   - Pastikan terdapat minimal satu *record* dengan `service_name` = `'wa_bot'`.
+   - Refresh tabel setiap 10 menit. Nilai pada kolom `last_ping_at` harus selalu diperbarui (bertambah 10 menit) setiap kali Anda melakukan refresh.
+   - Kolom `status` harus berisi `'ONLINE'`.
