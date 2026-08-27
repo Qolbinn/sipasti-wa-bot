@@ -148,3 +148,73 @@ export const recordDailyChat = async (lid_wa) => {
         logger.warn({ error: error.message }, 'Gagal merekam analitik harian ke DB (Fire and Forget)');
     }
 };
+
+/**
+ * Mengambil daftar petugas piket hari ini
+ * @returns {Promise<Array>} Array of { pegawai: { name, lid_wa } }
+ */
+export const getPetugasPiketHariIni = async () => {
+    try {
+        const todayStr = new Date().toLocaleDateString('sv-SE'); // 'YYYY-MM-DD'
+        const { data, error } = await supabase
+            .from('jadwal_piket')
+            .select('pegawai ( name, lid_wa )')
+            .eq('tanggal', todayStr);
+
+        if (error) throw error;
+        return data || [];
+    } catch (error) {
+        logger.error({ error: error.message }, 'Gagal mengambil jadwal_piket dari Supabase');
+        return [];
+    }
+};
+
+/**
+ * Mengambil statistik eskalasi yang belum selesai (OPEN dan ON_PROCESS)
+ * @returns {Promise<Object>} { openTicket, onProcessTicket }
+ */
+export const getEskalasiStats = async () => {
+    try {
+        const { data, error } = await supabase
+            .from('eskalasi')
+            .select('status')
+            .in('status', ['OPEN', 'ON_PROCESS']);
+
+        if (error) throw error;
+        
+        let openTicket = 0;
+        let onProcessTicket = 0;
+        
+        (data || []).forEach(ticket => {
+            if (ticket.status === 'OPEN') openTicket++;
+            if (ticket.status === 'ON_PROCESS') onProcessTicket++;
+        });
+        
+        return { openTicket, onProcessTicket };
+    } catch (error) {
+        logger.error({ error: error.message }, 'Gagal menghitung statistik eskalasi');
+        return { openTicket: 0, onProcessTicket: 0 };
+    }
+};
+
+/**
+ * Memperbarui status nyala/matinya bot (Ping)
+ * @param {string} status - Default 'ONLINE'
+ */
+export const updateBotStatus = async (status = 'ONLINE') => {
+    try {
+        const payload = {
+            service_name: 'wa_bot',
+            status: status,
+            last_ping_at: new Date().toISOString()
+        };
+
+        const { error } = await supabase
+            .from('bot_status')
+            .upsert(payload, { onConflict: 'service_name' });
+
+        if (error) throw error;
+    } catch (error) {
+        logger.warn({ error: error.message }, 'Gagal mengirim ping status ke bot_status (Fire and Forget)');
+    }
+};
