@@ -1,37 +1,37 @@
 [
   {
-    "id": "a4458b68-abb9-4e07-be45-abca3f47ac35",
-    "tipe": "reminder_jadwal",
-    "konten": "Selamat pagi, {{operatorName}}\r\nHari ini adalah jadwal piket Anda\r\n\r\nJangan lupa untuk absen dan memantau layanan eskalasi yang masuk melalui link berikut\r\n _pst-bps-3603/dashboard_\r\n _pst-bps-3603/dashboard_\r\n\r\nBerikut merupakan jumlah tiket eskalasi yang belum diselesaikan\r\n*Tiket Open* : {{openTicket}}\r\n*Tiket Diproses* : {{onProcessTicket}}",
-    "created_at": "2026-08-27T13:14:01.360759+00:00",
-    "updated_at": "2026-08-27T13:14:01.360759+00:00"
-  },
-  {
-    "id": "c2c33f7b-c068-45e5-abf5-5baa5c6de9cf",
-    "tipe": "reminder_eskalasi",
-    "konten": "Selamat pagi/siang, {{operatorName}}\r\nBerikut merupakan jumlah tiket eskalasi yang belum diselesaikan\r\n\r\n*Tiket Open* : {{openTicket}}\r\n*Tiket Diproses* : {{onProcessTicket}}\r\n\r\nSilahkan pantau perkembangan tiket eskalasi pelanggan dan berikan pelayanan yang terbaik",
-    "created_at": "2026-08-27T13:14:01.360759+00:00",
-    "updated_at": "2026-08-27T13:14:01.360759+00:00"
-  },
-  {
-    "id": "85b5d72a-1984-444f-8565-486db65f72bc",
-    "tipe": "feedback",
-    "konten": "Selamat {{timeGreeting}} {{customerName}}, layanan bantuan eskalasi telah selesai ditangani. Terima kasih telah menghubungi kami\r\n\r\nMohon kesediaannya mengisi ulasan penilaian layanan kami melalui link berikut:\r\n_s.bps.go.id/SKD3603_\r\n_s.bps.go.id/SKD3603_",
-    "created_at": "2026-08-27T13:14:01.360759+00:00",
-    "updated_at": "2026-08-27T13:14:01.360759+00:00"
-  },
-  {
-    "id": "74ef05d8-0c66-4de8-bb5b-e508fbd50a45",
+    "id": "c06b573c-bb4c-4baf-ad26-84c615709af5",
     "tipe": "greeting",
     "konten": "Selamat {{timeGreeting}} {{customerName}}, selamat datang di SIPASTI (Sistem Pelayanan Statistik Terintegrasi) BPS Kabupaten Tangerang.",
-    "created_at": "2026-08-27T13:14:01.360759+00:00",
-    "updated_at": "2026-08-27T13:52:36.702607+00:00"
+    "created_at": "2026-08-27T15:19:03.374842+00:00",
+    "updated_at": "2026-08-27T15:19:03.374842+00:00"
   },
   {
-    "id": "868cfbe1-1b53-4414-8b6c-c4da4bbefcba",
+    "id": "8ccc4bad-b7ce-4ac9-9357-ca406a357f48",
+    "tipe": "reminder_jadwal",
+    "konten": "Selamat pagi, {{operatorName}}\r\nHari ini adalah jadwal piket Anda\r\n\r\nJangan lupa untuk absen dan memantau layanan eskalasi yang masuk melalui link berikut\r\n _pst-bps-3603/dashboard_\r\n _pst-bps-3603/dashboard_\r\n\r\nBerikut merupakan jumlah tiket eskalasi yang belum diselesaikan\r\n*Tiket Open* : {{openTicket}}\r\n*Tiket Diproses* : {{onProcessTicket}}",
+    "created_at": "2026-08-27T15:19:03.374842+00:00",
+    "updated_at": "2026-08-27T15:19:03.374842+00:00"
+  },
+  {
+    "id": "474cda8e-5033-47ad-a458-0fe45fb28e34",
+    "tipe": "reminder_eskalasi",
+    "konten": "Selamat pagi/siang, {{operatorName}}\r\nBerikut merupakan jumlah tiket eskalasi yang belum diselesaikan\r\n\r\n*Tiket Open* : {{openTicket}}\r\n*Tiket Diproses* : {{onProcessTicket}}\r\n\r\nSilahkan pantau perkembangan tiket eskalasi pelanggan dan berikan pelayanan yang terbaik",
+    "created_at": "2026-08-27T15:19:03.374842+00:00",
+    "updated_at": "2026-08-27T15:19:03.374842+00:00"
+  },
+  {
+    "id": "27bb4a10-a089-4568-9f47-2795b6ae55dc",
     "tipe": "create_ticket",
-    "konten": "✅ Tiket Eskalasi telah berhasil dibuat lurr\n\nTerima kasih {{customerName}}, mohon menunggu petugas kami untuk memberikan layanan yang terbaik",
-    "created_at": "2026-08-27T13:14:01.360759+00:00",
-    "updated_at": "2026-08-27T14:09:47.605355+00:00"
+    "konten": "✅ Tiket Eskalasi telah berhasil dibuat\r\n\r\nTerima kasih {{customerName}}, mohon menunggu petugas kami untuk memberikan layanan yang terbaik",
+    "created_at": "2026-08-27T15:19:03.374842+00:00",
+    "updated_at": "2026-08-27T15:19:03.374842+00:00"
+  },
+  {
+    "id": "d15cd2ee-3be3-4639-ae18-777eabd7efac",
+    "tipe": "feedback",
+    "konten": "Selamat {{timeGreeting}} {{customerName}}, layanan bantuan eskalasi telah selesai ditangani. Terima kasih telah menghubungi kami\r\n\r\nMohon kesediaannya mengisi ulasan penilaian layanan kami melalui link berikut:\r\n_s.bps.go.id/SKD3603_\r\n_s.bps.go.id/SKD3603_",
+    "created_at": "2026-08-27T15:19:03.374842+00:00",
+    "updated_at": "2026-08-27T15:19:03.374842+00:00"
   }
 ]

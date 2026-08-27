@@ -8,8 +8,32 @@
     "content": "Kantor BPS buka hari Senin - Jumat pukul 08:00 - 16:00 WIB.",
     "urutan": 0,
     "is_active": true,
-    "created_at": "2026-08-27T13:14:01.360759+00:00",
-    "updated_at": "2026-08-27T13:14:01.360759+00:00"
+    "created_at": "2026-08-27T15:19:03.374842+00:00",
+    "updated_at": "2026-08-27T15:19:03.374842+00:00"
+  },
+  {
+    "id": "f2222222-2222-2222-2222-222222222222",
+    "parent_id": null,
+    "kode": "2",
+    "title": "Jadwal Sensus",
+    "is_menu": false,
+    "content": "Sensus Penduduk selanjutnya akan dilaksanakan pada tahun 2030. Untuk survei rutin tahun ini, silakan hubungi pihak kantor.",
+    "urutan": 0,
+    "is_active": true,
+    "created_at": "2026-08-27T15:19:03.374842+00:00",
+    "updated_at": "2026-08-27T15:19:03.374842+00:00"
+  },
+  {
+    "id": "f3333333-3333-3333-3333-333333333333",
+    "parent_id": null,
+    "kode": "3",
+    "title": "Data Indikator",
+    "is_menu": true,
+    "content": "Pilih informasi Data Indikator yang Anda butuhkan:",
+    "urutan": 0,
+    "is_active": true,
+    "created_at": "2026-08-27T15:19:03.374842+00:00",
+    "updated_at": "2026-08-27T15:19:03.374842+00:00"
   },
   {
     "id": "f4444444-4444-4444-4444-444444444444",
@@ -20,8 +44,8 @@
     "content": "Pilih menu Konsep dan Definisi yang ingin Anda baca:",
     "urutan": 0,
     "is_active": true,
-    "created_at": "2026-08-27T13:14:01.360759+00:00",
-    "updated_at": "2026-08-27T13:14:01.360759+00:00"
+    "created_at": "2026-08-27T15:19:03.374842+00:00",
+    "updated_at": "2026-08-27T15:19:03.374842+00:00"
   },
   {
     "id": "f9999999-9999-9999-9999-999999999999",
@@ -32,44 +56,8 @@
     "content": "TRIGGER_ESCALATION",
     "urutan": 0,
     "is_active": true,
-    "created_at": "2026-08-27T13:14:01.360759+00:00",
-    "updated_at": "2026-08-27T13:14:01.360759+00:00"
-  },
-  {
-    "id": "f2222222-2222-2222-2222-222222222222",
-    "parent_id": null,
-    "kode": "2",
-    "title": "Jadwal Sensus Ekonomi",
-    "is_menu": false,
-    "content": "Sensus Penduduk selanjutnya akan dilaksanakan pada tahun 2030. Untuk survei rutin tahun ini, silakan hubungi pihak kantor.",
-    "urutan": 0,
-    "is_active": true,
-    "created_at": "2026-08-27T13:14:01.360759+00:00",
-    "updated_at": "2026-08-27T13:51:25.19026+00:00"
-  },
-  {
-    "id": "f3b3b3b3-3b3b-3b3b-3b3b-3b3b3b3b3b3b",
-    "parent_id": "f3333333-3333-3333-3333-333333333333",
-    "kode": "3B",
-    "title": "Data Ketenagakerjaan",
-    "is_menu": false,
-    "content": "Tingkat Pengangguran Terbuka (TPT) Banten per Agustus 2023 sebesar 7.52%.",
-    "urutan": 0,
-    "is_active": true,
-    "created_at": "2026-08-27T13:14:01.360759+00:00",
-    "updated_at": "2026-08-27T13:14:01.360759+00:00"
-  },
-  {
-    "id": "f3c3c3c3-3c3c-3c3c-3c3c-3c3c3c3c3c3c",
-    "parent_id": "f3333333-3333-3333-3333-333333333333",
-    "kode": "3C",
-    "title": "Data Kependudukan",
-    "is_menu": false,
-    "content": "Jumlah Penduduk Banten hasil Sensus Penduduk 2020 adalah 11,90 juta jiwa.",
-    "urutan": 0,
-    "is_active": true,
-    "created_at": "2026-08-27T13:14:01.360759+00:00",
-    "updated_at": "2026-08-27T13:14:01.360759+00:00"
+    "created_at": "2026-08-27T15:19:03.374842+00:00",
+    "updated_at": "2026-08-27T15:19:03.374842+00:00"
   },
   {
     "id": "f3a3a3a3-3a3a-3a3a-3a3a-3a3a3a3a3a3a",
@@ -80,8 +68,32 @@
     "content": "Indeks Pembangunan Manusia (IPM) Banten tahun 2023 adalah 73.32.",
     "urutan": 0,
     "is_active": true,
-    "created_at": "2026-08-27T13:14:01.360759+00:00",
-    "updated_at": "2026-08-27T13:14:01.360759+00:00"
+    "created_at": "2026-08-27T15:19:03.374842+00:00",
+    "updated_at": "2026-08-27T15:19:03.374842+00:00"
+  },
+  {
+    "id": "f3b3b3b3-3b3b-3b3b-3b3b-3b3b3b3b3b3b",
+    "parent_id": "f3333333-3333-3333-3333-333333333333",
+    "kode": "3B",
+    "title": "Data Ketenagakerjaan",
+    "is_menu": false,
+    "content": "Tingkat Pengangguran Terbuka (TPT) Banten per Agustus 2023 sebesar 7.52%.",
+    "urutan": 0,
+    "is_active": true,
+    "created_at": "2026-08-27T15:19:03.374842+00:00",
+    "updated_at": "2026-08-27T15:19:03.374842+00:00"
+  },
+  {
+    "id": "f3c3c3c3-3c3c-3c3c-3c3c-3c3c3c3c3c3c",
+    "parent_id": "f3333333-3333-3333-3333-333333333333",
+    "kode": "3C",
+    "title": "Data Kependudukan",
+    "is_menu": false,
+    "content": "Jumlah Penduduk Banten hasil Sensus Penduduk 2020 adalah 11,90 juta jiwa.",
+    "urutan": 0,
+    "is_active": true,
+    "created_at": "2026-08-27T15:19:03.374842+00:00",
+    "updated_at": "2026-08-27T15:19:03.374842+00:00"
   },
   {
     "id": "f4a4a4a4-4a4a-4a4a-4a4a-4a4a4a4a4a4a",
@@ -92,8 +104,8 @@
     "content": "IPM mengukur capaian pembangunan manusia berbasis sejumlah komponen dasar kualitas hidup.",
     "urutan": 0,
     "is_active": true,
-    "created_at": "2026-08-27T13:14:01.360759+00:00",
-    "updated_at": "2026-08-27T13:14:01.360759+00:00"
+    "created_at": "2026-08-27T15:19:03.374842+00:00",
+    "updated_at": "2026-08-27T15:19:03.374842+00:00"
   },
   {
     "id": "f4b4b4b4-4b4b-4b4b-4b4b-4b4b4b4b4b4b",
@@ -104,7 +116,7 @@
     "content": "Pengangguran adalah penduduk yang tidak bekerja namun sedang mencari pekerjaan atau mempersiapkan usaha baru.",
     "urutan": 0,
     "is_active": true,
-    "created_at": "2026-08-27T13:14:01.360759+00:00",
-    "updated_at": "2026-08-27T13:14:01.360759+00:00"
+    "created_at": "2026-08-27T15:19:03.374842+00:00",
+    "updated_at": "2026-08-27T15:19:03.374842+00:00"
   }
 ]

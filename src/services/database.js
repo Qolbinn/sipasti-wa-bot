@@ -225,7 +225,7 @@ export const getEskalasiStats = async () => {
 export const updateBotStatus = async (status = 'ONLINE') => {
     try {
         const payload = {
-            service_name: 'wa_bot',
+            service_name: 'whatsapp_bot',
             status: status,
             last_ping_at: new Date().toISOString()
         };
