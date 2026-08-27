@@ -31,12 +31,9 @@ export const processIncomingMessage = async (msg) => {
         if (isFromMe) {
             const cleanText = text.trim().toLowerCase();
             if (cleanText === '/selesai' || cleanText === '/close') {
-                const isResolved = resolveEscalation(senderNumber);
-                if (isResolved) {
-                    await sendText(remoteJid, "✅ Sesi layanan eskalasi telah selesai. Terima kasih telah menghubungi BPS Kabupaten Tangerang.");
-                    const labelId = getLabelId();
-                    if (labelId) await removeChatLabel(remoteJid, labelId);
-                }
+                // Update ke database, yang mana akan otomatis memicu trigger realtime
+                // untuk menghapus label dan mengirim pesan ulasan.
+                await resolveEscalation(senderNumber);
             }
             return; // Jangan memproses logika bot untuk pesan yang dikirim oleh agen sendiri
         }

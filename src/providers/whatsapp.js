@@ -90,8 +90,8 @@ export const sendText = async (jid, message, quotedMsg = null) => {
         throw new Error('WhatsApp Socket belum terhubung.');
     }
     try {
-        // Gunakan jid asli
-        const formattedJid = jid.includes('@') ? jid : `${jid}@s.whatsapp.net`;
+        // Gunakan jid asli atau fallback ke @lid
+        const formattedJid = jid.includes('@') ? jid : `${jid}@lid`;
 
         // Simulasikan status "sedang mengetik..." di HP penerima
         await sock.sendPresenceUpdate('composing', formattedJid);
@@ -119,8 +119,9 @@ export const sendText = async (jid, message, quotedMsg = null) => {
 export const addChatLabel = async (jid, labelId) => {
     if (sock && labelId) {
         try {
-            await sock.addChatLabel(jid, labelId);
-            logger.info({ jid, labelId }, 'Berhasil menambahkan label obrolan');
+            const formattedJid = jid.includes('@') ? jid : `${jid}@lid`;
+            await sock.addChatLabel(formattedJid, labelId);
+            logger.info({ jid: formattedJid, labelId }, 'Berhasil menambahkan label obrolan');
         } catch (error) {
             logger.error({ jid, labelId, error: error.message }, 'Gagal menambahkan label (mungkin bukan akun bisnis atau ID salah)');
         }
@@ -135,8 +136,9 @@ export const addChatLabel = async (jid, labelId) => {
 export const removeChatLabel = async (jid, labelId) => {
     if (sock && labelId) {
         try {
-            await sock.removeChatLabel(jid, labelId);
-            logger.info({ jid, labelId }, 'Berhasil menghapus label obrolan');
+            const formattedJid = jid.includes('@') ? jid : `${jid}@lid`;
+            await sock.removeChatLabel(formattedJid, labelId);
+            logger.info({ jid: formattedJid, labelId }, 'Berhasil menghapus label obrolan');
         } catch (error) {
             logger.error({ jid, labelId, error: error.message }, 'Gagal menghapus label');
         }
