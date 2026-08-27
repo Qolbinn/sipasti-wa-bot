@@ -4,9 +4,13 @@ import { initializeCache } from './services/cacheService.js';
 import { initRealtimeListeners } from './handlers/realtimeHandler.js';
 import { initWhatsApp } from './providers/whatsapp.js';
 import { processIncomingMessage } from './handlers/messageHandler.js';
+import { initAllCronJobs } from './jobs/index.js';
 
+// ==========================================
+// Inisialisasi Aplikasi
+// ==========================================
 const start = async () => {
-    logger.info('Memulai service SIPASTI Bot (Phase 1 PoC)...');
+    logger.info('Menyiapkan layanan SIPASTI WA Bot (Hybrid Mode)...');
     
     try {
         // Tarik data awal dari Supabase ke lokal Cache JSON
@@ -14,6 +18,9 @@ const start = async () => {
         
         // Daftarkan listener Supabase Realtime
         initRealtimeListeners();
+
+        // Daftarkan Scheduler Cron Jobs secara terpusat
+        initAllCronJobs();
 
         // Inisialisasi WhatsApp provider dan passing handler sebagai callback
         // Pola ini mematuhi Adapter Pattern / Dependency Inversion
