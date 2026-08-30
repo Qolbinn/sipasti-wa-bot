@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { processEscalation, processFeedbackTrigger } from '../../../src/services/escalationService.js';
+import { processEscalation, processEscalationUpdate } from '../../../src/services/escalationService.js';
 import { clearSession, getSession } from '../../../src/services/sessionService.js';
 import { insertEscalation, updateFeedbackStatus, logBotNotif } from '../../../src/services/database.js';
 import { sendText } from '../../../src/providers/whatsapp.js';
@@ -142,12 +142,12 @@ describe('escalationService', () => {
         });
     });
 
-    describe('Feedback Trigger (processFeedbackTrigger)', () => {
+    describe('Feedback Trigger (processEscalationUpdate)', () => {
         it('harus memproses feedback jika status berubah ke PENDING', async () => {
             const oldData = { id: 'TKT-123', pelanggan_lid: '628123', nama_pelanggan: 'Andi', feedback_status: null };
             const newData = { ...oldData, feedback_status: 'PENDING' };
 
-            await processFeedbackTrigger(newData, oldData);
+            await processEscalationUpdate(newData, oldData);
 
             expect(sendText).toHaveBeenCalled();
             expect(updateFeedbackStatus).toHaveBeenCalledWith('TKT-123', 'SENT');
@@ -158,7 +158,7 @@ describe('escalationService', () => {
             const oldData = { id: 'TKT-123', pelanggan_lid: '628123', nama_pelanggan: 'Andi', feedback_status: 'PENDING' };
             const newData = { ...oldData, feedback_status: 'PENDING' }; // tidak ada perubahan
 
-            await processFeedbackTrigger(newData, oldData);
+            await processEscalationUpdate(newData, oldData);
 
             // Karena status tidak berubah (sama-sama PENDING), fungsi harusnya tidak memanggil apa-apa
             // Kita reset mock call counter terlebih dahulu di beforeEach, jadi harusnya 0
