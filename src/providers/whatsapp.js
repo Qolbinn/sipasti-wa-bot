@@ -18,6 +18,15 @@ export const initWhatsApp = async (onMessageCallback) => {
         auth: state,
         // Menyembunyikan log default dari Baileys agar terminal kita tetap bersih
         logger: logger.child({ module: 'baileys' }, { level: 'error' }),
+        // Matikan Sync Histori Penuh untuk mencegah Rate-Limit (HTTP 429) dari Meta saat restart
+        syncFullHistory: false,
+        // Abaikan semua obrolan grup (@g.us) dan saluran (@newsletter)
+        shouldIgnoreJid: (jid) => jid?.endsWith('@g.us') || jid?.endsWith('@newsletter'),
+        // Jeda backoff otomatis saat terjadi kendala jaringan
+        retryRequestDelayMs: 2000,
+        // Maksimal percobaan ulang request
+        maxMsgRetryCount: 3,
+        markOnlineOnConnect: true,
     });
 
     sock.ev.on('connection.update', (update) => {
@@ -51,9 +60,13 @@ export const initWhatsApp = async (onMessageCallback) => {
         sock.ev.on('messages.upsert', async ({ messages, type }) => {
             if (type === 'notify') {
                 for (const msg of messages) {
-                    // Meneruskan semua pesan (termasuk dari agen/fromMe) ke handler
-                    // Handler sudah memiliki pengaman untuk tidak membalas pesan bot itu sendiri
-                    // if (!msg.key.fromMe && msg.message) {
+                    const remoteJid = msg.key.remoteJid;
+
+                    // Abaikan jika pesan berasal dari grup atau status/story broadcast
+                    if (remoteJid?.endsWith('@g.us') || remoteJid === 'status@broadcast') {
+                        continue;
+                    }
+
                     if (msg.message) {
                         await onMessageCallback(msg);
                     }
