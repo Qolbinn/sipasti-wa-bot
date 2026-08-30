@@ -1,10 +1,11 @@
-import { sendText, markRead, addChatLabel, removeChatLabel } from '../providers/whatsapp.js';
+import { sendText, markRead, markUnread, addChatLabel, removeChatLabel } from '../providers/whatsapp.js';
 import { logger } from '../utils/logger.js';
 import { isMessageAllowed } from '../utils/numberFilter.js';
 import { getFaqResponse } from '../services/faqService.js';
 import { checkAndRecordGreeting, getGreetingText } from '../services/greetingService.js';
 import { getSession } from '../services/sessionService.js';
 import { startEscalation, processEscalation, resolveEscalation } from '../services/escalationService.js';
+import { hasActiveEscalation } from '../services/activeEscalationTracker.js';
 
 // ID Label bisa diatur melalui file .env
 const getLabelId = () => process.env.LABEL_ESKALASI_ID;
@@ -46,8 +47,12 @@ export const processIncomingMessage = async (msg) => {
 
         logger.info({ remoteJid, text }, 'Pesan diterima');
 
-        // Tandai pesan sudah dibaca (centang biru di HP pengirim)
-        await markRead(msg.key);
+        // Kelola status baca (Read / Unread)
+        if (hasActiveEscalation(senderNumber)) {
+            await markUnread(remoteJid);
+        } else {
+            await markRead(msg.key);
+        }
 
         // ==== CEK SESI AKTIF (STATE MACHINE) ====
         const activeSession = getSession(senderNumber);

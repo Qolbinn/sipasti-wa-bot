@@ -3,6 +3,7 @@ import path from 'path';
 import { logger } from '../utils/logger.js';
 import { getSession, updateSession, clearSession } from './sessionService.js';
 import { insertEscalation, updateFeedbackStatus, resolveEscalationDB, logBotNotif } from './database.js';
+import { addActiveEscalation, removeActiveEscalation } from './activeEscalationTracker.js';
 import { getTemplate } from './templateService.js';
 import { sendText, removeChatLabel } from '../providers/whatsapp.js';
 
@@ -110,6 +111,9 @@ export const processEscalation = async (senderNumber, text, session) => {
 
                     const successMsg = customTemplate || `✅ *Tiket Berhasil Dibuat*\n\nTerima kasih ${session.data.name}, keperluan Anda telah diteruskan ke petugas kami.`;
 
+                    // Tambahkan ke tracker tiket aktif agar pesan berikutnya dipaksa unread
+                    addActiveEscalation(senderNumber);
+
                     return {
                         message: successMsg,
                         addLabel: true // Flag agar handler tahu harus menambahkan label
@@ -165,6 +169,9 @@ export const processEscalationUpdate = async (newData, oldData) => {
         // Hapus Label Eskalasi WhatsApp secara otomatis
         const labelId = process.env.LABEL_ESKALASI_ID;
         if (labelId) await removeChatLabel(newData.pelanggan_lid, labelId);
+
+        // Hapus dari tracker tiket aktif
+        removeActiveEscalation(newData.pelanggan_lid);
 
         // Kirim pesan konfirmasi penutupan tiket standar (bukan survei)
         // [Sementara Dicomment]

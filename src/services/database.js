@@ -239,3 +239,22 @@ export const updateBotStatus = async (status = 'ONLINE') => {
         logger.warn({ error: error.message }, 'Gagal mengirim ping status ke bot_status (Fire and Forget)');
     }
 };
+
+/**
+ * Mengambil semua pelanggan_lid yang memiliki tiket aktif (OPEN dan ON_PROCESS)
+ * @returns {Promise<Array<string>>}
+ */
+export const fetchActiveEscalationLids = async () => {
+    try {
+        const { data, error } = await supabase
+            .from('eskalasi')
+            .select('pelanggan_lid')
+            .in('status', ['OPEN', 'ON_PROCESS']);
+
+        if (error) throw error;
+        return (data || []).map(row => row.pelanggan_lid).filter(Boolean);
+    } catch (error) {
+        logger.error({ error: error.message }, 'Gagal mengambil daftar pelanggan_lid aktif');
+        return [];
+    }
+};

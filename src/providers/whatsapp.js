@@ -78,6 +78,22 @@ export const markRead = async (key) => {
 };
 
 /**
+ * Menandai obrolan sebagai belum dibaca (Force Unread di WA Petugas)
+ * @param {string} jid - WhatsApp ID
+ */
+export const markUnread = async (jid) => {
+    if (sock) {
+        try {
+            const formattedJid = jid.includes('@') ? jid : `${jid}@lid`;
+            await sock.chatModify({ markRead: false }, formattedJid);
+            logger.debug({ jid: formattedJid }, 'Berhasil menandai obrolan sebagai unread');
+        } catch (error) {
+            logger.error({ jid, error: error.message }, 'Gagal menandai obrolan belum dibaca (markUnread)');
+        }
+    }
+};
+
+/**
  * Fungsi adapter untuk mengirim teks
  * Mengandung mekanisme randomDelay untuk menghindari sistem anti-spam Meta.
  * 
