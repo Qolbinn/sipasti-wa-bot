@@ -11,6 +11,32 @@ import { hasActiveEscalation } from '../services/activeEscalationTracker.js';
 const getLabelId = () => process.env.LABEL_ESKALASI_ID;
 
 /**
+ * Menentukan tindakan status baca berdasarkan nilai UNREAD_MODE di .env
+ * - ESCALATION (default): unread HANYA jika pelanggan punya tiket aktif
+ * - ALWAYS_UNREAD: semua pesan selalu dibiarkan unread (petugas buka manual)
+ * - ALWAYS_READ: semua pesan selalu ditandai terbaca (perilaku awal)
+ * @param {string} senderNumber
+ * @param {string} remoteJid
+ * @param {Object} msgKey
+ */
+const handleReadStatus = async (senderNumber, remoteJid, msgKey) => {
+    const mode = (process.env.UNREAD_MODE || 'ESCALATION').toUpperCase();
+
+    if (mode === 'ALWAYS_UNREAD') {
+        await markUnread(remoteJid);
+    } else if (mode === 'ALWAYS_READ') {
+        await markRead(msgKey);
+    } else {
+        // Mode: ESCALATION (default) — smart unread berbasis tiket aktif
+        if (hasActiveEscalation(senderNumber)) {
+            await markUnread(remoteJid);
+        } else {
+            await markRead(msgKey);
+        }
+    }
+};
+
+/**
  * Memproses pesan masuk dari WhatsApp
  * @param {Object} msg - Payload pesan mentah dari Baileys
  */
@@ -47,12 +73,8 @@ export const processIncomingMessage = async (msg) => {
 
         logger.info({ remoteJid, text }, 'Pesan diterima');
 
-        // Kelola status baca (Read / Unread)
-        if (hasActiveEscalation(senderNumber)) {
-            await markUnread(remoteJid);
-        } else {
-            await markRead(msg.key);
-        }
+        // Kelola status baca berdasarkan konfigurasi UNREAD_MODE di .env
+        await handleReadStatus(senderNumber, remoteJid, msg.key);
 
         // ==== CEK SESI AKTIF (STATE MACHINE) ====
         const activeSession = getSession(senderNumber);

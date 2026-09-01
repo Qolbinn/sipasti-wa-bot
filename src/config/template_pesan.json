@@ -30,8 +30,8 @@
   {
     "id": "d15cd2ee-3be3-4639-ae18-777eabd7efac",
     "tipe": "feedback",
-    "konten": "Selamat {{timeGreeting}} {{customerName}}, layanan bantuan eskalasi telah selesai ditangani. Terima kasih telah menghubungi kami\r\n\r\nMohon kesediaannya mengisi ulasan penilaian layanan kami melalui link berikut:\r\n_s.bps.go.id/SKD3603_\r\n_s.bps.go.id/SKD3603_",
+    "konten": "Selamat {{timeGreeting}} {{customerName}}, layanan bantuan eskalasi telah selesai ditangani. Terima kasih telah menghubungi kami\n\nMohon kesediaannya mengisi ulasan penilaian layanan kami melalui link berikut:\n_s.bps.go.id/SKD3603_\n_s.bps.go.id/SKD3603_\n\ntest",
     "created_at": "2026-08-27T15:19:03.374842+00:00",
-    "updated_at": "2026-08-27T15:19:03.374842+00:00"
+    "updated_at": "2026-09-01T13:09:10.54929+00:00"
   }
 ]

@@ -13,7 +13,7 @@ export const initReminderJob = () => {
         logger.info('Mengeksekusi Cron Job: Pengingat Jadwal Piket (07:30)');
         try {
             const jadwalList = await getPetugasPiketHariIni();
-            
+
             if (jadwalList.length === 0) {
                 logger.info('Tidak ada jadwal piket untuk hari ini.');
                 return;
@@ -47,10 +47,10 @@ export const initReminderJob = () => {
     cron.schedule('00 10,13 * * *', async () => {
         const jam = new Date().getHours();
         logger.info(`Mengeksekusi Cron Job: Pengingat Eskalasi (${jam}:00)`);
-        
+
         try {
             const stats = await getEskalasiStats();
-            
+
             if (stats.openTicket === 0 && stats.onProcessTicket === 0) {
                 logger.info('Tidak ada tiket eskalasi yang tertunda. Skip reminder.');
                 return;
@@ -83,6 +83,6 @@ export const initReminderJob = () => {
             logger.error({ error: error.message }, 'Gagal mengeksekusi cron pengingat eskalasi');
         }
     });
-    
+
     logger.info('✅ Reminder scheduler berhasil didaftarkan.');
 };
