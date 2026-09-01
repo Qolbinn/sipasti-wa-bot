@@ -1,13 +1,40 @@
-import { sendText, markRead, addChatLabel, removeChatLabel } from '../providers/whatsapp.js';
+import { sendText, markRead, markUnread, addChatLabel, removeChatLabel } from '../providers/whatsapp.js';
 import { logger } from '../utils/logger.js';
 import { isMessageAllowed } from '../utils/numberFilter.js';
 import { getFaqResponse } from '../services/faqService.js';
 import { checkAndRecordGreeting, getGreetingText } from '../services/greetingService.js';
 import { getSession } from '../services/sessionService.js';
 import { startEscalation, processEscalation, resolveEscalation } from '../services/escalationService.js';
+import { hasActiveEscalation } from '../services/activeEscalationTracker.js';
 
 // ID Label bisa diatur melalui file .env
 const getLabelId = () => process.env.LABEL_ESKALASI_ID;
+
+/**
+ * Menentukan tindakan status baca berdasarkan nilai UNREAD_MODE di .env
+ * - ESCALATION (default): unread HANYA jika pelanggan punya tiket aktif
+ * - ALWAYS_UNREAD: semua pesan selalu dibiarkan unread (petugas buka manual)
+ * - ALWAYS_READ: semua pesan selalu ditandai terbaca (perilaku awal)
+ * @param {string} senderNumber
+ * @param {string} remoteJid
+ * @param {Object} msgKey
+ */
+const handleReadStatus = async (senderNumber, remoteJid, msgKey) => {
+    const mode = (process.env.UNREAD_MODE || 'ESCALATION').toUpperCase();
+
+    if (mode === 'ALWAYS_UNREAD') {
+        await markUnread(remoteJid);
+    } else if (mode === 'ALWAYS_READ') {
+        await markRead(msgKey);
+    } else {
+        // Mode: ESCALATION (default) — smart unread berbasis tiket aktif
+        if (hasActiveEscalation(senderNumber)) {
+            await markUnread(remoteJid);
+        } else {
+            await markRead(msgKey);
+        }
+    }
+};
 
 /**
  * Memproses pesan masuk dari WhatsApp
@@ -31,12 +58,9 @@ export const processIncomingMessage = async (msg) => {
         if (isFromMe) {
             const cleanText = text.trim().toLowerCase();
             if (cleanText === '/selesai' || cleanText === '/close') {
-                const isResolved = resolveEscalation(senderNumber);
-                if (isResolved) {
-                    await sendText(remoteJid, "✅ Sesi layanan eskalasi telah selesai. Terima kasih telah menghubungi BPS Kabupaten Tangerang.");
-                    const labelId = getLabelId();
-                    if (labelId) await removeChatLabel(remoteJid, labelId);
-                }
+                // Update ke database, yang mana akan otomatis memicu trigger realtime
+                // untuk menghapus label dan mengirim pesan ulasan.
+                await resolveEscalation(senderNumber);
             }
             return; // Jangan memproses logika bot untuk pesan yang dikirim oleh agen sendiri
         }
@@ -49,8 +73,8 @@ export const processIncomingMessage = async (msg) => {
 
         logger.info({ remoteJid, text }, 'Pesan diterima');
 
-        // Tandai pesan sudah dibaca (centang biru di HP pengirim)
-        await markRead(msg.key);
+        // Kelola status baca berdasarkan konfigurasi UNREAD_MODE di .env
+        await handleReadStatus(senderNumber, remoteJid, msg.key);
 
         // ==== CEK SESI AKTIF (STATE MACHINE) ====
         const activeSession = getSession(senderNumber);

@@ -5,8 +5,13 @@ import { updateBotStatus } from '../services/database.js';
 export const initPingJob = () => {
     logger.info('Mendaftarkan Scheduler (Cron Jobs) untuk Status Ping...');
 
-    // Ping status setiap 10 menit
-    cron.schedule('*/10 * * * *', async () => {
+    // Lakukan ping pertama kali secara langsung saat bot baru dinyalakan
+    updateBotStatus('ONLINE').catch(err => {
+        logger.error({ error: err.message }, 'Gagal melakukan ping awal');
+    });
+
+    // Ping status secara periodik setiap 5 menit
+    cron.schedule('*/5 * * * *', async () => {
         try {
             await updateBotStatus('ONLINE');
         } catch (error) {
@@ -14,5 +19,5 @@ export const initPingJob = () => {
         }
     });
 
-    logger.info('✅ Ping scheduler berhasil didaftarkan.');
+    logger.info('✅ Ping scheduler berhasil didaftarkan (interval: 5 menit).');
 };

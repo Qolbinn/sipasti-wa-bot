@@ -2,7 +2,7 @@ import { supabase } from '../config/supabase.js';
 import { logger } from '../utils/logger.js';
 import { syncFaqCache, syncTemplateCache } from '../services/cacheService.js';
 import { syncKategoriCache } from '../services/database.js';
-import { processFeedbackTrigger } from '../services/escalationService.js';
+import { processEscalationUpdate } from '../services/escalationService.js';
 
 /**
  * Inisialisasi Realtime Listener Supabase untuk semua tabel.
@@ -54,8 +54,8 @@ export const initRealtimeListeners = () => {
     supabase
         .channel('public:eskalasi')
         .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'eskalasi' }, (payload) => {
-            // Delegasikan logika bisnis pengiriman WA ke service yang bersangkutan
-            processFeedbackTrigger(payload.new, payload.old);
+            // Delegasikan logika bisnis (penutupan tiket & pengiriman WA) ke service yang bersangkutan
+            processEscalationUpdate(payload.new, payload.old);
         })
         .subscribe((status) => {
             if (status === 'SUBSCRIBED') {

@@ -1,10 +1,11 @@
 import fs from 'fs';
 import path from 'path';
 import { logger } from '../utils/logger.js';
-import { updateSession, clearSession } from './sessionService.js';
-import { insertEscalation, updateFeedbackStatus, logBotNotif } from './database.js';
+import { getSession, updateSession, clearSession } from './sessionService.js';
+import { insertEscalation, updateFeedbackStatus, resolveEscalationDB, logBotNotif } from './database.js';
+import { addActiveEscalation, removeActiveEscalation } from './activeEscalationTracker.js';
 import { getTemplate } from './templateService.js';
-import { sendText } from '../providers/whatsapp.js';
+import { sendText, removeChatLabel } from '../providers/whatsapp.js';
 
 const configDir = path.join(process.cwd(), 'src', 'config');
 
@@ -31,7 +32,7 @@ const getKategori = () => {
  */
 export const processEscalation = async (senderNumber, text, session) => {
     const input = text.trim();
-    
+
     // Fitur Batal Global
     if (input.toUpperCase() === 'BATAL') {
         clearSession(senderNumber);
@@ -44,7 +45,7 @@ export const processEscalation = async (senderNumber, text, session) => {
             if (input.length < 2) {
                 return { message: "Nama terlalu pendek. Silakan tuliskan nama lengkap Anda yang sebenarnya (Ketik *BATAL* untuk membatalkan):" };
             }
-            
+
             const categories = getKategori();
             if (categories.length === 0) {
                 return { message: "Mohon maaf, layanan eskalasi sedang tidak tersedia karena daftar kategori kosong. Silakan ketik *BATAL*." };
@@ -62,31 +63,31 @@ export const processEscalation = async (senderNumber, text, session) => {
         case 'ESCALATION_ASK_CATEGORY':
             const cats = getKategori();
             const choiceIndex = parseInt(input) - 1;
-            
+
             if (isNaN(choiceIndex) || choiceIndex < 0 || choiceIndex >= cats.length) {
                 return { message: "Pilihan tidak valid. Silakan balas dengan *angka* yang sesuai dengan pilihan kategori." };
             }
-            
+
             const selectedCat = cats[choiceIndex];
-            
-            updateSession(senderNumber, 'ESCALATION_ASK_DESC', { 
-                name: session.data.name, 
+
+            updateSession(senderNumber, 'ESCALATION_ASK_DESC', {
+                name: session.data.name,
                 kategori_kode: selectedCat.kode,
                 kategori_nama: selectedCat.nama
             });
-            
-            return { message: `Anda memilih kategori *${selectedCat.nama}*.\n\nSilakan jelaskan secara detail kendala atau keperluan Anda (Ketik *BATAL* untuk membatalkan):` };
+
+            return { message: `Anda memilih kategori *${selectedCat.nama}*.\n\nSilakan jelaskan secara detail kendala atau keperluan Anda \n\n(Ketik *BATAL* untuk membatalkan):` };
 
         case 'ESCALATION_ASK_DESC':
             // Asumsikan input yang masuk adalah Deskripsi Keperluan
             if (input.length < 10) {
                 return { message: "Deskripsi terlalu singkat. Mohon jelaskan lebih detail agar petugas kami dapat membantu Anda dengan baik (Ketik *BATAL* untuk membatalkan):" };
             }
-            updateSession(senderNumber, 'ESCALATION_CONFIRM', { 
+            updateSession(senderNumber, 'ESCALATION_CONFIRM', {
                 name: session.data.name,
                 kategori_kode: session.data.kategori_kode,
                 kategori_nama: session.data.kategori_nama,
-                description: input 
+                description: input
             });
             return { message: `📋 *Konfirmasi Permintaan Layanan*\n\n*Nama:* ${session.data.name}\n*Kategori:* ${session.data.kategori_nama}\n*Keperluan:* ${input}\n\nApakah data di atas sudah benar?\n\nKetik *1* untuk SETUJU & KIRIM\nKetik *0* untuk ULANGI\nKetik *BATAL* untuk membatalkan` };
 
@@ -99,18 +100,21 @@ export const processEscalation = async (senderNumber, text, session) => {
                     detail: session.data.description,
                     channel: 'whatsapp'
                 };
-                
+
                 const ticket = await insertEscalation(payload);
                 clearSession(senderNumber);
-                
+
                 if (ticket) {
                     const customTemplate = getTemplate('create_ticket', {
                         customerName: session.data.name
                     });
-                    
+
                     const successMsg = customTemplate || `✅ *Tiket Berhasil Dibuat*\n\nTerima kasih ${session.data.name}, keperluan Anda telah diteruskan ke petugas kami.`;
-                    
-                    return { 
+
+                    // Tambahkan ke tracker tiket aktif agar pesan berikutnya dipaksa unread
+                    addActiveEscalation(senderNumber);
+
+                    return {
                         message: successMsg,
                         addLabel: true // Flag agar handler tahu harus menambahkan label
                     };
@@ -136,12 +140,11 @@ export const processEscalation = async (senderNumber, text, session) => {
  * @param {string} senderNumber - Nomor pelanggan
  * @returns {boolean}
  */
-export const resolveEscalation = (senderNumber) => {
-    // Karena kita tidak menyimpan state eskalasi di lokal JSON, maka resolve via WA cmd /selesai harus 
-    // mengeksekusi update DB Supabase jika diperlukan. 
-    // Tapi karena agen membalas dari HP-nya langsung, dia tidak mengubah status di DB web app secara atomik.
-    // Fitur /selesai di WA ini sementara hanya membuang label chat WA business.
-    return true; 
+export const resolveEscalation = async (senderNumber) => {
+    // Hanya mengubah status tiket di Database menjadi RESOLVED (tanpa memaksa feedback).
+    // Hal ini akan memicu event Realtime secara otomatis untuk mengakhiri sesi WA.
+    await resolveEscalationDB(senderNumber);
+    return true;
 };
 
 /**
@@ -153,31 +156,47 @@ export const startEscalation = (senderNumber) => {
 };
 
 /**
- * Memproses logika notifikasi ketika trigger feedback dari database masuk
- * @param {Object} newData Data eskalasi terbaru
- * @param {Object} oldData Data eskalasi sebelumnya
+ * Dipanggil oleh handler Realtime ketika ada perubahan data Eskalasi di database
+ * @param {Object} newData 
+ * @param {Object} oldData 
  */
-export const processFeedbackTrigger = async (newData, oldData) => {
-    // Cek apakah feedback_status berubah menjadi 'PENDING'
+export const processEscalationUpdate = async (newData, oldData) => {
+    
+    // 1. Cek apakah tiket baru saja di-RESOLVED (oleh Web App atau perintah WA)
+    if (newData.status === 'RESOLVED' && oldData.status !== 'RESOLVED') {
+        logger.info({ eskalasi_id: newData.id, lid_wa: newData.pelanggan_lid }, 'Tiket eskalasi diselesaikan, menghapus sesi & label');
+        
+        // Hapus Label Eskalasi WhatsApp secara otomatis
+        const labelId = process.env.LABEL_ESKALASI_ID;
+        if (labelId) await removeChatLabel(newData.pelanggan_lid, labelId);
+
+        // Hapus dari tracker tiket aktif
+        removeActiveEscalation(newData.pelanggan_lid);
+
+        // Kirim pesan konfirmasi penutupan tiket standar (bukan survei)
+        // [Sementara Dicomment]
+        // await sendText(newData.pelanggan_lid, "✅ Sesi layanan eskalasi telah selesai. Terima kasih telah menghubungi BPS Kabupaten Tangerang.");
+    }
+
+    // 2. Cek apakah petugas meminta pengiriman Feedback (Survei)
     if (newData.feedback_status === 'PENDING' && oldData.feedback_status !== 'PENDING') {
         logger.info({ eskalasi_id: newData.id, lid_wa: newData.pelanggan_lid }, 'Trigger feedback terdeteksi dari Supabase');
         
         try {
             // Menentukan sapaan waktu
             const hour = new Date().getHours();
-            let timeGreeting = '';
-            if (hour >= 0 && hour < 11) timeGreeting = 'pagi';
-            else if (hour >= 11 && hour < 15) timeGreeting = 'siang';
-            else if (hour >= 15 && hour < 18) timeGreeting = 'sore';
-            else timeGreeting = 'malam';
+            let timeGreeting = 'Pagi';
+            if (hour >= 11 && hour < 15) timeGreeting = 'Siang';
+            else if (hour >= 15 && hour < 18) timeGreeting = 'Sore';
+            else if (hour >= 18 || hour < 3) timeGreeting = 'Malam';
 
             // Ambil template
             const msg = getTemplate('feedback', {
-                timeGreeting: timeGreeting,
+                timeGreeting,
                 customerName: newData.nama_pelanggan
             }) || `Selamat ${timeGreeting} ${newData.nama_pelanggan}, mohon isi ulasan penilaian layanan eskalasi kami.`;
 
-            // Kirim Pesan WA
+            // Kirim Pesan WA (Survei)
             await sendText(newData.pelanggan_lid, msg);
             
             // Update Supabase menjadi SENT
@@ -186,9 +205,9 @@ export const processFeedbackTrigger = async (newData, oldData) => {
             // Catat ke log bot
             await logBotNotif('feedback', newData.pelanggan_lid, 'SUCCESS');
             logger.info('✅ Berhasil mengirim notifikasi feedback');
-
         } catch (error) {
-            logger.error({ error: error.message }, 'Gagal memproses trigger feedback');
+            logger.error({ error: error.message }, 'Gagal mengirim pesan feedback via Realtime Trigger');
+            await updateFeedbackStatus(newData.id, 'ERROR');
             await logBotNotif('feedback', newData.pelanggan_lid, 'ERROR', error.message);
         }
     }

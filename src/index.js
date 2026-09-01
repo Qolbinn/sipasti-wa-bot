@@ -5,6 +5,7 @@ import { initRealtimeListeners } from './handlers/realtimeHandler.js';
 import { initWhatsApp } from './providers/whatsapp.js';
 import { processIncomingMessage } from './handlers/messageHandler.js';
 import { initAllCronJobs } from './jobs/index.js';
+import { initActiveEscalations } from './services/activeEscalationTracker.js';
 
 // ==========================================
 // Inisialisasi Aplikasi
@@ -15,6 +16,9 @@ const start = async () => {
     try {
         // Tarik data awal dari Supabase ke lokal Cache JSON
         await initializeCache();
+
+        // Inisialisasi tracker tiket eskalasi aktif
+        await initActiveEscalations();
         
         // Daftarkan listener Supabase Realtime
         initRealtimeListeners();

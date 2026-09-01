@@ -18,6 +18,15 @@ export const initWhatsApp = async (onMessageCallback) => {
         auth: state,
         // Menyembunyikan log default dari Baileys agar terminal kita tetap bersih
         logger: logger.child({ module: 'baileys' }, { level: 'error' }),
+        // Matikan Sync Histori Penuh untuk mencegah Rate-Limit (HTTP 429) dari Meta saat restart
+        syncFullHistory: false,
+        // Abaikan semua obrolan grup (@g.us) dan saluran (@newsletter)
+        shouldIgnoreJid: (jid) => jid?.endsWith('@g.us') || jid?.endsWith('@newsletter'),
+        // Jeda backoff otomatis saat terjadi kendala jaringan
+        retryRequestDelayMs: 2000,
+        // Maksimal percobaan ulang request
+        maxMsgRetryCount: 3,
+        markOnlineOnConnect: true,
     });
 
     sock.ev.on('connection.update', (update) => {
@@ -51,9 +60,13 @@ export const initWhatsApp = async (onMessageCallback) => {
         sock.ev.on('messages.upsert', async ({ messages, type }) => {
             if (type === 'notify') {
                 for (const msg of messages) {
-                    // Meneruskan semua pesan (termasuk dari agen/fromMe) ke handler
-                    // Handler sudah memiliki pengaman untuk tidak membalas pesan bot itu sendiri
-                    // if (!msg.key.fromMe && msg.message) {
+                    const remoteJid = msg.key.remoteJid;
+
+                    // Abaikan jika pesan berasal dari grup atau status/story broadcast
+                    if (remoteJid?.endsWith('@g.us') || remoteJid === 'status@broadcast') {
+                        continue;
+                    }
+
                     if (msg.message) {
                         await onMessageCallback(msg);
                     }
@@ -78,6 +91,22 @@ export const markRead = async (key) => {
 };
 
 /**
+ * Menandai obrolan sebagai belum dibaca (Force Unread di WA Petugas)
+ * @param {string} jid - WhatsApp ID
+ */
+export const markUnread = async (jid) => {
+    if (sock) {
+        try {
+            const formattedJid = jid.includes('@') ? jid : `${jid}@lid`;
+            await sock.chatModify({ markRead: false }, formattedJid);
+            logger.debug({ jid: formattedJid }, 'Berhasil menandai obrolan sebagai unread');
+        } catch (error) {
+            logger.error({ jid, error: error.message }, 'Gagal menandai obrolan belum dibaca (markUnread)');
+        }
+    }
+};
+
+/**
  * Fungsi adapter untuk mengirim teks
  * Mengandung mekanisme randomDelay untuk menghindari sistem anti-spam Meta.
  * 
@@ -90,8 +119,8 @@ export const sendText = async (jid, message, quotedMsg = null) => {
         throw new Error('WhatsApp Socket belum terhubung.');
     }
     try {
-        // Gunakan jid asli
-        const formattedJid = jid.includes('@') ? jid : `${jid}@s.whatsapp.net`;
+        // Gunakan jid asli atau fallback ke @lid
+        const formattedJid = jid.includes('@') ? jid : `${jid}@lid`;
 
         // Simulasikan status "sedang mengetik..." di HP penerima
         await sock.sendPresenceUpdate('composing', formattedJid);
@@ -119,8 +148,9 @@ export const sendText = async (jid, message, quotedMsg = null) => {
 export const addChatLabel = async (jid, labelId) => {
     if (sock && labelId) {
         try {
-            await sock.addChatLabel(jid, labelId);
-            logger.info({ jid, labelId }, 'Berhasil menambahkan label obrolan');
+            const formattedJid = jid.includes('@') ? jid : `${jid}@lid`;
+            await sock.addChatLabel(formattedJid, labelId);
+            logger.info({ jid: formattedJid, labelId }, 'Berhasil menambahkan label obrolan');
         } catch (error) {
             logger.error({ jid, labelId, error: error.message }, 'Gagal menambahkan label (mungkin bukan akun bisnis atau ID salah)');
         }
@@ -135,8 +165,9 @@ export const addChatLabel = async (jid, labelId) => {
 export const removeChatLabel = async (jid, labelId) => {
     if (sock && labelId) {
         try {
-            await sock.removeChatLabel(jid, labelId);
-            logger.info({ jid, labelId }, 'Berhasil menghapus label obrolan');
+            const formattedJid = jid.includes('@') ? jid : `${jid}@lid`;
+            await sock.removeChatLabel(formattedJid, labelId);
+            logger.info({ jid: formattedJid, labelId }, 'Berhasil menghapus label obrolan');
         } catch (error) {
             logger.error({ jid, labelId, error: error.message }, 'Gagal menghapus label');
         }

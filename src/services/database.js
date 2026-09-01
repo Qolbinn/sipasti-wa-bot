@@ -66,6 +66,27 @@ export const updateFeedbackStatus = async (id, status) => {
 };
 
 /**
+ * Menyelesaikan tiket eskalasi (via perintah WA /selesai) di Database
+ * Hanya mengubah status jadi RESOLVED (feedback tidak otomatis)
+ * @param {string} pelanggan_lid - Nomor pelanggan (lid_wa)
+ */
+export const resolveEscalationDB = async (pelanggan_lid) => {
+    try {
+        const { error } = await supabase
+            .from('eskalasi')
+            .update({ status: 'RESOLVED' })
+            .eq('pelanggan_lid', pelanggan_lid)
+            .neq('status', 'RESOLVED');
+
+        if (error) throw error;
+        return true;
+    } catch (error) {
+        logger.error({ error: error.message }, 'Gagal menyelesaikan tiket via Database');
+        return false;
+    }
+};
+
+/**
  * Mencatat notifikasi bot (seperti feedback) ke bot_notif_log
  * @param {string} tipe_notif - Contoh: 'feedback'
  * @param {string} tujuan_lid - Nomor WA
@@ -118,7 +139,7 @@ export const syncKategoriCache = async () => {
         if (error) throw error;
 
         const cachePath = path.join(process.cwd(), 'src', 'config', 'kategori_layanan.json');
-        
+
         // Simpan ke config/kategori_layanan.json
         fs.writeFileSync(cachePath, JSON.stringify(data, null, 2));
         logger.info('✅ Cache Kategori Layanan berhasil disinkronisasi ke file lokal');
@@ -181,15 +202,15 @@ export const getEskalasiStats = async () => {
             .in('status', ['OPEN', 'ON_PROCESS']);
 
         if (error) throw error;
-        
+
         let openTicket = 0;
         let onProcessTicket = 0;
-        
+
         (data || []).forEach(ticket => {
             if (ticket.status === 'OPEN') openTicket++;
             if (ticket.status === 'ON_PROCESS') onProcessTicket++;
         });
-        
+
         return { openTicket, onProcessTicket };
     } catch (error) {
         logger.error({ error: error.message }, 'Gagal menghitung statistik eskalasi');
@@ -204,7 +225,7 @@ export const getEskalasiStats = async () => {
 export const updateBotStatus = async (status = 'ONLINE') => {
     try {
         const payload = {
-            service_name: 'wa_bot',
+            service_name: 'whatsapp_bot',
             status: status,
             last_ping_at: new Date().toISOString()
         };
@@ -216,5 +237,24 @@ export const updateBotStatus = async (status = 'ONLINE') => {
         if (error) throw error;
     } catch (error) {
         logger.warn({ error: error.message }, 'Gagal mengirim ping status ke bot_status (Fire and Forget)');
+    }
+};
+
+/**
+ * Mengambil semua pelanggan_lid yang memiliki tiket aktif (OPEN dan ON_PROCESS)
+ * @returns {Promise<Array<string>>}
+ */
+export const fetchActiveEscalationLids = async () => {
+    try {
+        const { data, error } = await supabase
+            .from('eskalasi')
+            .select('pelanggan_lid')
+            .in('status', ['OPEN', 'ON_PROCESS']);
+
+        if (error) throw error;
+        return (data || []).map(row => row.pelanggan_lid).filter(Boolean);
+    } catch (error) {
+        logger.error({ error: error.message }, 'Gagal mengambil daftar pelanggan_lid aktif');
+        return [];
     }
 };

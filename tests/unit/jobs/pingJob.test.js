@@ -24,7 +24,7 @@ describe('Ping Scheduler (Cron Job)', () => {
         expect(cron.schedule).toHaveBeenCalledTimes(1);
         
         // Pengecekan parameter jadwal
-        expect(cron.schedule.mock.calls[0][0]).toBe('*/10 * * * *');
+        expect(cron.schedule.mock.calls[0][0]).toBe('*/5 * * * *');
     });
 
     it('Cron Ping - harus memanggil updateBotStatus', async () => {
@@ -34,7 +34,7 @@ describe('Ping Scheduler (Cron Job)', () => {
         const jobPing = cron.schedule.mock.calls[0][1];
         await jobPing(); // eksekusi manual
 
-        expect(updateBotStatus).toHaveBeenCalledTimes(1);
+        expect(updateBotStatus).toHaveBeenCalledTimes(2); // 1x startup, 1x cron manual
         expect(updateBotStatus).toHaveBeenCalledWith('ONLINE');
     });
 });
